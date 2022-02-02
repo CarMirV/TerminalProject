@@ -37,6 +37,7 @@ labels = le.fit_transform(labels)
 print(len(labels))
 split = train_test_split(faces, pcaFaces, labels, test_size=0.25, stratify=labels, random_state=42)
 (origTrain, origTest, trainX, testX, trainY, testY) = split
+print("Cantidad de imagenes en test %s" % (len(origTest)))
 print("Construyendo eigenfaces")
 pca = PCA(svd_solver="randomized", n_components=150, whiten=True)
 start = time.time()
@@ -54,7 +55,7 @@ for (i, component) in enumerate(pca.components_[:40]):
 print("Numero de imagenes %s" % (len(images)))
 display = imutils.build_montages(images, (56, 138), (10,4))[0]
 
-media = pca.mean_.reshape((112, 276))
+media = pca.mean_.reshape((400, 64))
 media = rescale_intensity(media, out_range=(0,255))
 cv2.imshow("Media", media)
 cv2.imshow("Componentes", display)
