@@ -13,16 +13,15 @@ class Distortion:
 
 distortion = [Distortion('affine',[10,10,15,15,139,0,100,20,0,92,50,80]),Distortion('affine_projection',[0.7, 0.1, 0, 0.6, 5, 5]),Distortion('arc',[15,])]
 
-
-
 try:
     connection = mysql.connector.connect(host='localhost',database='terminalProject',user='root',password='Cmirandauammx1610!')
     if connection.is_connected():
         db_info = connection.get_server_info()
         print("Connected to MySQL Server version ", db_info)
         cursor = connection.cursor()
-        cursor.execute("CREATE TABLE IF NOT EXISTS terminalProject.facesDatabase  (path VARCHAR(255), subject VARCHAR(255));")
-        print("Se ha generado de manera exitosa la tabla facesDatabase")
+        cursor.execute("CREATE TABLE IF NOT EXISTS terminalProject.facesDatabase  (id int NOT NULL AUTO_INCREMENT, subject VARCHAR(255), PRIMARY KEY(id));")
+        cursor.execute("CREATE TABLE IF NOT EXISTS terminalProject.imagesPath (id int NOT NULL AUTO_INCREMENT, imagePath VARCHAR(255), subjectId int, PRIMARY KEY(id), FOREIGN KEY(subjectId) REFERENCES terminalProject.facesDatabase(id));")
+        print("Se ha generado de manera exitosa la tabla facesDatabase e imagesPath")
         for i in range(40):
             print("Modificando sujeto " + str(i+1))
             path = "./archive/s" + str(i+1)
@@ -36,26 +35,31 @@ try:
                     saveName = path + "/" + "distortion_" + modify.distortion + ".pgm"
                     print("Guardando la imagen con en: " + saveName)
                     imageSelection.save(filename=saveName)
-                    cursor.execute("INSERT INTO facesDatabase (path, subject) VALUES ('%s','%s');" % (saveName, str(i+1)))
+                    cursor.execute("INSERT INTO terminalProject.facesDatabase (subject) VALUES('%s');" % ("sujeto" + str(i+1)))
+                    cursor.execute("INSERT INTO terminalProject.imagesPath (imagePath, subjectId) VALUES('%s',%s);" % (saveName, str(i+1)))
         for i in range(40):
             print("Modificando sujeto " + str(i+1))
             path = "./archive/s" + str(i+1)
             img = random.randint(1,10)
             imgPath = path + "/" + str(img) + ".pgm"
             print(imgPath)
+            cursor.execute("INSERT INTO terminalProject.facesDatabase (subject) VALUES(\"%s\");" % ("sujeto" + str(i+1)))
             with Image(filename=imgPath) as imageSelection:
                 imageSelection.transform('92x112','135%')
                 imageSelection.crop(width=92, height=112, gravity='center')
                 saveName = path + "/" + str(i+1) + "_scale.pgm"
                 imageSelection.save(filename=saveName)
+                cursor.execute("INSERT INTO terminalProject.imagesPath (imagePath, subjectId) VALUES('%s',%s);" % (saveName, str(i+1)))
             img = random.randint(1,10)
             imgPath = path + "/" + str(img) + ".pgm"
             with Image(filename=imgPath) as imageSelection:
                 imageSelection.brightness_contrast(-30,10,'all_channels')
                 saveName = path + "/" + str(i+1) + "_brightness.pgm"
                 imageSelection.save(filename=saveName)
+                cursor.execute("INSERT INTO terminalProject.imagesPath (imagePath, subjectId) VALUES(\"%s\",%s);" % (saveName, str(i+1)))
             for imageNumber in range(10):
-                cursor.execute("INSERT INTO facesDatabase (path, subject) VALUES ('%s','%s');" % (path + "/" + str(imageNumber+1), str(i+1)))
+                saveName = path + "/" + str(imageNumber) + ".pgm"
+                cursor.execute("INSERT INTO terminalProject.imagesPath (imagePath, subjectId) VALUES('%s',%s);" % ())
 except Error as e:
     print("Error while connecting to MySQL", e)
 finally:

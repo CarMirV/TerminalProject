@@ -4,13 +4,49 @@ import pandas as pd
 import os.path
 from sklearn.neighbors import KNeighborsClassifier
 
+#Encontre dentro de un texto que Knn en reconocimiento facial es muy acertado cuando se presentan rostros descubiertos,
+#sin embargo, su precision cae drasticamente cuando se presenta un objeto como lentes, barba, cabello
+#o alguna posicion que no permita ver el rostro completamente de frente y con una buena iluminacion
+
 fileName = "faceData.csv"
 preName = "s"
 classifier = cv2.CascadeClassifier("./haarcascade_frontalface_default.xml")
 
-#Encontre dentro de un texto que Knn en reconocimiento facial es muy acertado cuando se presentan rostros descubiertos,
-#sin embargo, su precision cae drasticamente cuando se presenta un objeto como lentes, barba, cabello
-#o alguna posicion que no permita ver el rostro completamente de frente y con una buena iluminacion
+
+def main(args, fileName):
+    for subject in range(40):
+        subjectName = preName + str(subject + 1)
+        facesAsList = []
+        print("Generando valores correspondientes a el sujeto %s" % (str(subject + 1)))
+        for image in range(10):
+            selection = cv2.imread("./archive/s%s/%s.pgm" % (str(subject+1),str(image+1)))
+            detectedFaces = classifier.detectMultiScale(selection, 1.5, 5)
+            print("Detectando rostros")
+            #print(detectedFaces)
+            sorted(detectedFaces, key = lambda x: x[2]*x[3],reverse = True)
+            print("Ordenando rostros detectados")
+            print(detectedFaces)
+            print(len(detectedFaces))
+            if len(detectedFaces) == 1:
+                x, y, w, h = detectedFaces[0]
+                print("X=%s, Y=%s, W=%s, H=%s" % (x, y, w, h))
+                imageFrame = selection[y:y + h, x:x + w]
+                #cv2.imshow("face", imageFrame)
+                imageToSave = cv2.resize(imageFrame, (100,100))
+                print(len(facesAsList), type(imageFrame), imageFrame.shape)
+                facesAsList.append(imageToSave.reshape(-1))
+            else:
+                x, y, w, h = [0,0,92,112]
+                imageFrame = selection[y:y + h, x:x + w]
+                imageToSave = cv2.resize(imageFrame, (100,100))
+                print(len(facesAsList), type(imageFrame), imageFrame.shape)
+                print("X=%s, Y=%s, W=%s, H=%s" % (x, y, w, h))
+                facesAsList.append(imageToSave.reshape(-1))
+        print("Tamanio de lista de rostros a ligar con el sujeto %s: %s" % (str(subject + 1),len(facesAsList)))
+        print("Almacenando datos en archivo csv")
+        #saveDataInCSV(subjectName, np.array(facesAsList))
+    print("Iniciando reconocimiento facial")
+    recognizeFace(fileName)
 
 def saveDataInCSV(name, data):
     if os.path.isfile(fileName):
@@ -64,36 +100,6 @@ def recognizeFace(imageToRecognizePath):
     #os.remove("./%s" % (fileName))
     print("Eliminacion exitosa, cuando se vuelva a ejecutar el algoritmo se volvera a generar este archivo")
 
-for subject in range(40):
-    subjectName = preName + str(subject + 1)
-    facesAsList = []
-    print("Generando valores correspondientes a el sujeto %s" % (str(subject + 1)))
-    for image in range(10):
-        selection = cv2.imread("./archive/s%s/%s.pgm" % (str(subject+1),str(image+1)))
-        detectedFaces = classifier.detectMultiScale(selection, 1.5, 5)
-        print("Detectando rostros")
-        #print(detectedFaces)
-        sorted(detectedFaces, key = lambda x: x[2]*x[3],reverse = True)
-        print("Ordenando rostros detectados")
-        print(detectedFaces)
-        print(len(detectedFaces))
-        if len(detectedFaces) == 1:
-            x, y, w, h = detectedFaces[0]
-            print("X=%s, Y=%s, W=%s, H=%s" % (x, y, w, h))
-            imageFrame = selection[y:y + h, x:x + w]
-            #cv2.imshow("face", imageFrame)
-            imageToSave = cv2.resize(imageFrame, (100,100))
-            print(len(facesAsList), type(imageFrame), imageFrame.shape)
-            facesAsList.append(imageToSave.reshape(-1))
-        else:
-            x, y, w, h = [0,0,92,112]
-            imageFrame = selection[y:y + h, x:x + w]
-            imageToSave = cv2.resize(imageFrame, (100,100))
-            print(len(facesAsList), type(imageFrame), imageFrame.shape)
-            print("X=%s, Y=%s, W=%s, H=%s" % (x, y, w, h))
-            facesAsList.append(imageToSave.reshape(-1))
-    print("Tamanio de lista de rostros a ligar con el sujeto %s: %s" % (str(subject + 1),len(facesAsList)))
-    print("Almacenando datos en archivo csv")
-    #saveDataInCSV(subjectName, np.array(facesAsList))
-print("Iniciando reconocimiento facial")
-recognizeFace("./archive/s3/1.pgm")
+
+if __name__ == '__main__':
+    main()
