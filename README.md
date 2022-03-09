@@ -1,2 +1,2 @@
-# TerminalProyect
-Terminal Proyect as a Thesis for my BA's degree in Computer Engineering
+# TerminalProject
+Terminal Project as a Thesis for my BA's degree in Computer Engineering
