@@ -1,6 +1,7 @@
 import sys
 import os.path
 import random
+import cv2
 from wand.image import Image
 import mysql.connector
 from mysql.connector import Error
@@ -12,7 +13,7 @@ class Distortion:
         self.distortion = distortion
         self.arguments = arguments
 
-distortion = [Distortion('affine',[10,10,15,15,139,0,100,20,0,92,50,80]),Distortion('affine_projection',[0.7, 0.1, 0, 0.6, 5, 5]),Distortion('arc',[15,])]
+distortion = [Distortion('affine',[10,10,15,15,139,0,100,20,0,92,50,80]),Distortion('arc',[15,])]
 
 def testClass():
     for i in range(40):
@@ -27,8 +28,8 @@ try:
         db_info = connection.get_server_info()
         print("Connected to MySQL Server version ", db_info)
         cursor = connection.cursor()
-        cursor.execute("CREATE TABLE IF NOT EXISTS terminalProject.facesDatabase  (id int NOT NULL AUTO_INCREMENT, subject VARCHAR(255), PRIMARY KEY(id));")
-        cursor.execute("CREATE TABLE IF NOT EXISTS terminalProject.imagesPath (id int NOT NULL AUTO_INCREMENT, imagePath VARCHAR(255), subjectId int, PRIMARY KEY(id));")
+        cursor.execute("CREATE TABLE IF NOT EXISTS terminalProject.facesDatabase  (id int NOT NULL AUTO_INCREMENT, subject VARCHAR(255));")
+        cursor.execute("CREATE TABLE IF NOT EXISTS terminalProject.imagesPath (id int NOT NULL AUTO_INCREMENT, imagePath VARCHAR(255), subjectId int);")
         print("Se ha generado de manera exitosa la tabla facesDatabase e imagesPath")
         for i in range(40):
             print("Modificando sujeto " + str(i+1))
@@ -41,7 +42,7 @@ try:
                 with Image(filename=imgPath) as imageSelection:
                     imageSelection.distort(modify.distortion, modify.arguments)
                     print("Modificando la imagen: " + str(img) + " con el metodo: " + modify.distortion)
-                    saveName = path + "/" + "distortion_" + modify.distortion + ".pgm"
+                    saveName = "./archive/modifications/" + str(i+1) + "distortion_" + modify.distortion + ".pgm"
                     print("Guardando la imagen con en: " + saveName)
                     imageSelection.save(filename=saveName)
                     cursor.execute("INSERT INTO terminalProject.imagesPath (imagePath, subjectId) VALUES('%s',%s);" % (saveName, str(i+1)))
@@ -52,16 +53,16 @@ try:
             imgPath = path + "/" + str(img) + ".pgm"
             print(imgPath)
             with Image(filename=imgPath) as imageSelection:
-                imageSelection.transform('92x112','135%')
-                imageSelection.crop(width=92, height=112, gravity='center')
-                saveName = path + "/" + str(i+1) + "_scale.pgm"
+                imageSelection.transform('112x112','135%')
+                imageSelection.crop(width=112, height=112, gravity='center')
+                saveName = path + "./archive/modifications/" + str(i+1) + "_scale.pgm"
                 imageSelection.save(filename=saveName)
                 cursor.execute("INSERT INTO terminalProject.imagesPath (imagePath, subjectId) VALUES('%s',%s);" % (saveName, str(i+1)))
             img = random.randint(1,10)
             imgPath = path + "/" + str(img) + ".pgm"
             with Image(filename=imgPath) as imageSelection:
                 imageSelection.brightness_contrast(-30,10,'all_channels')
-                saveName = path + "/" + str(i+1) + "_brightness.pgm"
+                saveName = "./archive/modifications/" + str(i+1) + "_brightness.pgm"
                 imageSelection.save(filename=saveName)
                 cursor.execute("INSERT INTO terminalProject.imagesPath (imagePath, subjectId) VALUES(\"%s\",%s);" % (saveName, str(i+1)))
             for imageNumber in range(10):

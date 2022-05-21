@@ -60,8 +60,6 @@ def updateResultImages():
     root.eigenfacesCanva.update()
     plotValues()
     root.timeGraphImage = PhotoImage(file = './timeGraph.png')
-    imageResized = root.timeGraphImage.resize((200,200), Image.ANTIALIAS)
-    root.timeGraphCanva.create_image(100, 100, anchor=CENTER, image=imageResized)
     root.timeGraphCanva.update()
 
 def startEvaluation():

@@ -1,32 +1,40 @@
 from numpy.lib.npyio import load
+import sklearn
 from sklearn.preprocessing import LabelEncoder
 from sklearn.decomposition import PCA
 from sklearn.svm import SVC
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report
 from skimage.exposure import rescale_intensity
+from sklearn.metrics import accuracy_score
 import numpy as np
 import argparse
 import imutils
 import time
 import cv2
 import os
+import loadingFaces
 
 
 def main(args, fileName):
     print("Inicializando deteccion con algoritmo Eigenfaces")
-    (faces, labels) = loadDataSet()
+    (faces, labels) = loadingFaces.loadDataSet()
     print("Las imagenes de la base de datos han sido cargadas")
     pcaFaces = np.array([f.flatten() for f in faces])
+    print("Longitud de pcaFaces")
     print(len(pcaFaces))
     le = LabelEncoder()
+    #print("Etiquetas de imagenes antes de transformacion")
+    #print(labels)
     labels = le.fit_transform(labels)
-    print("Etiquetas de imagenes")
+    labels.sort()
+    print("Etiquetas de imagenes despues de transformacion")
     print(len(labels))
     print(labels)
     print()
     split = train_test_split(faces, pcaFaces, labels, test_size=0.25, stratify=labels, random_state=42)
     (origTrain, origTest, trainX, testX, trainY, testY) = split
+    print(testY)
     print("Cantidad de imagenes en test %s" % (len(origTest)))
     print("Construyendo eigenfaces")
     pca = PCA(svd_solver="randomized", n_components=300, whiten=True)
@@ -68,56 +76,67 @@ def main(args, fileName):
     start = time.time()
     response = model.predict(imageToEvaluate)
     end = time.time()
-    print("Valor de respuesta %s" % (response))
+    print("Valor de respuesta %s" % (str(response[0])))
     responseName = le.inverse_transform(response)[0]
-    responseImage = images[int(responseName)]
+    responseSubjectImage = cv2.imread("./archive/s%s/1.pgm" % (str(response[0])))
+    responseImage = images[int(str(response[0]))]
+    responseSubjectImageResized = cv2.resize(responseSubjectImage, (112,112))
     responseImageResized = cv2.resize(responseImage, (112,112))
     expectedImage = cv2.imread(fileName)
     expectedImage = cv2.resize(expectedImage, (112,112))
     
     #cv2.imshow("Imagen evaluada", expectedImage)
-    #cv2.imshow("Imagen respuesta con cv2", responseImageResized)
+    #cv2.imshow("Imagen respuesta con cv2", responseSubjectImageResized)
     #cv2.waitKey(0)
+    #cv2.destroyAllWindows()
     print("prediccion: {}, valor esperado: {}".format(responseName, "Sujeto 1"))
 
     print("Evaluando el modelo")
     predicciones = model.predict(pca.transform(testX))
-    print(classification_report(testY,predicciones, target_names=le.classes_))
+    print("Reporte de precision para conjunto sin alteraciones")
 
-    sideBySide = np.concatenate((expectedImage, responseImageResized), axis=1)
     resultingTime = end-start
-    return sideBySide, resultingTime
+    return (responseSubjectImageResized, resultingTime, (classification_report(testY, predicciones, target_names=le.classes_)), ("Sujeto " + str(response[0])))
 
-    #idxs = np.random.choice(range(0, len(testY)), size=10, replace=False)
-    #for i in idxs:
-    #    predName = le.inverse_transform([predicciones[i]])[0]
-    #    actualName = le.classes_[testY[i]]
-    #    face = np.dstack([origTest[i]] * 3)
-    #    face = imutils.resize(face, width=250)
-    #    cv2.putText(face, "pred: {}".format(predName), (5, 25), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
-    #    cv2.putText(face, "actual: {}".format(actualName), (5, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 255), 2)
-    #    print("prediccion: {}, valor esperado: {}".format(predName, actualName))
-    #    cv2.imshow("Face", face)
-    #    cv2.waitKey(0)
+distortions = ['_brightness_','_distortion_affine1_', '_distortion_affine2_', '_distortion_arc1_', '_distortion_arc2_', '_scale_']
 
-def loadDataSet():
-    loadedFaces = []
-    loadedLabels = []
-    for subject in range(40):
-        for imageNumber in range(10):
-            selectedImage = cv2.imread('./archive/s%s/%s.pgm' % (str(subject+1), str(imageNumber+1)))
-            loadedFaces.append(selectedImage)
-            loadedLabels.append('%s' % (str(subject+1)))
-            load = imutils.build_montages(loadedFaces, (56, 138), (10,2))[0]
-        #print("Imagenes cargadas para el sujeto " + str(subject+1))
-        #print("labels generados")
-        #print(loadedLabels)
-        #cv2.namedWindow("Imagenes cargadas", cv2.WINDOW_NORMAL)
-        #cv2.imshow("Imagenes cargadas", load)
-        #cv2.waitKey(0)
-    loadedFaces = np.array(loadedFaces)
-    loadedLabels = np.array(loadedLabels)
-    return (loadedFaces,loadedLabels)
+def testingMatrix():
+    generalScores = []
+    print("Inicializando deteccion con algoritmo Eigenfaces")
+    (faces, labels) = loadingFaces.loadDataSet()
+    pcaFaces = np.array([f.flatten() for f in faces])
+    print("Las imagenes de la base de datos han sido cargadas")
+    le = LabelEncoder()
+    labels = le.fit_transform(labels)
+    labels.sort()
+    split = train_test_split(faces, pcaFaces, labels, test_size=0.25, stratify=labels, random_state=42)
+    (origTrain, origTest, trainX, testX, trainY, testY) = split
+    pca = PCA(svd_solver="randomized", n_components=300, whiten=True)
+    trainX = pca.fit_transform(trainX)
+    for (i, component) in enumerate(pca.components_[:40]):
+            component = component.reshape((112, 276))
+            component = rescale_intensity(component, out_range=(0,255))
+            component = np.dstack([component.astype("uint8")] * 3)
+    model = SVC(kernel="linear", C=10.0, gamma=0.001, random_state=42)
+    model.fit(trainX,trainY)
+    print("Evaluando el modelo")
+    predicciones = model.predict(pca.transform(pcaFaces))
+    print("Precision sin alteraciones")
+    print(accuracy_score(labels,predicciones))
+    generalScores.append(accuracy_score(labels,predicciones))
+    for distortion in distortions:
+        (faces2, labels2) = loadingFaces.loadModifiedDataSetNew(distortion)
+        print("Tamanio de caras cargadas %s" % (len(faces2)))
+        pcaModiefiedFaces = np.array([f.flatten() for f in faces2])
+        labels2 = le.fit_transform(labels2)
+        labels2.sort()
+        prediccionesMod = model.predict(pca.transform(pcaModiefiedFaces))
+        print("Precision con distorsion %s" % (distortion))
+        print(accuracy_score(labels2,prediccionesMod))
+        generalScores.append(accuracy_score(labels2,prediccionesMod))
+        for x in prediccionesMod:
+            predicciones = np.append(predicciones, x)
+    return generalScores, predicciones
 
 if __name__ == '__main__':
     main()
