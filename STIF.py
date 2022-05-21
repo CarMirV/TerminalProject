@@ -102,13 +102,13 @@ def testingMatrix():
     split = train_test_split(faces, faces, labels, test_size=0.90, stratify=labels, random_state=42)
     (origTrain, origTest, trainX, testX, trainY, testY) = split
     predicciones = []
-    #for face in testX:
-    #    result = evaluatingPhoto(face)
-    #    print("Imagen predecida %s" % (result))
-    #    predicciones.append(result)
-    #print("Precision sin distorsiones")
-    #print(accuracy_score(testY, predicciones))
-    #generalScores.append(accuracy_score(testY, predicciones))
+    for face in testX:
+        result = evaluatingPhoto(face)
+        print("Imagen predecida %s" % (result))
+        predicciones.append(result)
+    print("Precision sin distorsiones")
+    print(accuracy_score(testY, predicciones))
+    generalScores.append(accuracy_score(testY, predicciones))
     for distortion in distortions:
         (faces2, labels2) = loadingFaces.loadModifiedDataSetNew(distortion)
         labels2 = le.fit_transform(labels2)

@@ -159,13 +159,13 @@ def testingMatrix():
     print("Tamanio de clases %s" % (len(le.classes_)))
     print(le.classes_)
     print(testY)
-    #for face in testX:
-    #    result = evaluatingPhoto(face)
-    #    print("Imagen predecida %s" % (result))
-    #    predicciones.append(result)
-    #print("Precision sin distorsion")
-    #print(accuracy_score(testY, predicciones))
-    #generalScores.append(accuracy_score(testY, predicciones))
+    for face in testX:
+        result = evaluatingPhoto(face)
+        print("Imagen predecida %s" % (result))
+        predicciones.append(result)
+    print("Precision sin distorsion")
+    print(accuracy_score(testY, predicciones))
+    generalScores.append(accuracy_score(testY, predicciones))
     for distortion in distortions:
         (faces2, labels2) = loadingFaces.loadModifiedDataSetNew(distortion)
         labels2 = le.fit_transform(labels2)
