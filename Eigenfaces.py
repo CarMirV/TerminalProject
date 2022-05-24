@@ -66,7 +66,9 @@ def main(args, fileName):
 
     print("Iniciando entrenamiento de clasificador")
     model = SVC(kernel="linear", C=10.0, gamma=0.001, random_state=42)
+    model2 = SVC(kernel="sigmoid", C=10.0, gamma=0.001, random_state=42)
     model.fit(trainX,trainY)
+    model2.fit(trainX,trainY)
     imageToEvaluate = []
     imageToEvaluate.append(cv2.imread(fileName))
     imageToEvaluate = np.array([image.flatten() for image in imageToEvaluate])
@@ -75,13 +77,19 @@ def main(args, fileName):
     print("Forma de imagen a evaluar ", imageToEvaluate.shape)
     start = time.time()
     response = model.predict(imageToEvaluate)
+    response2 = model2.predict(imageToEvaluate)
     end = time.time()
     print("Valor de respuesta %s" % (str(response[0])))
     responseName = le.inverse_transform(response)[0]
+    responseName2 = le.inverse_transform(response2)[0]
     responseSubjectImage = cv2.imread("./archive/s%s/1.pgm" % (str(response[0])))
+    responseSubjectImage2 = cv2.imread("./archive/s%s/2.pgm" % (str(response2[0])))
     responseImage = images[int(str(response[0]))]
+    responseImage2 = images[int(str(response2[0]))]
     responseSubjectImageResized = cv2.resize(responseSubjectImage, (112,112))
+    responseSubjectImageResized2 = cv2.resize(responseSubjectImage2, (112,112))
     responseImageResized = cv2.resize(responseImage, (112,112))
+    responseImageResized2 = cv2.resize(responseImage2, (112,112))
     expectedImage = cv2.imread(fileName)
     expectedImage = cv2.resize(expectedImage, (112,112))
     
@@ -96,7 +104,7 @@ def main(args, fileName):
     print("Reporte de precision para conjunto sin alteraciones")
 
     resultingTime = end-start
-    return (responseSubjectImageResized, resultingTime, (classification_report(testY, predicciones, target_names=le.classes_)), ("Sujeto " + str(response[0])))
+    return (responseSubjectImageResized, resultingTime, ("Sujeto " + str(response[0])), responseSubjectImageResized2, ("Sujeto " + str(response2[0])))
 
 distortions = ['_brightness_','_distortion_affine1_', '_distortion_affine2_', '_distortion_arc1_', '_distortion_arc2_', '_scale_']
 

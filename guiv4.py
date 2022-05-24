@@ -13,13 +13,23 @@ import knn
 import Eigenfaces
 import cv2
 import DetailedMatches
+
+global knnSecImgRes
+global knnSecSujeto
+global eigenSecImageRes
+global eigenSecSujeto
 global stifSecondImage
 global stifSegundoSujeto
 global stifResImgPath
+global stifSecResImgPath
 global knnResImgPath
 global eigenfacesResImgPath
+global eigenSecResImgPath
+eigenSecResImgPath = './eigenSecRes.png'
 stifResImgPath = './stifResult.png'
+stifSecResImgPath = './stifSecImg.png'
 knnResImgPath = './knnResult.png'
+knnSecResImgPath = './knnSecRes.png'
 eigenfacesResImgPath = './eigenfacesResult.png'
 global stifExecTime
 global knnExecTime
@@ -81,10 +91,9 @@ def startEvaluation():
     print("Iniciando evaluacion")
     stifImageRes, stifExecutionTime, stifSujeto, stifSecondImage, stifSegundoSujeto = STIF.main(args="", fileName=fileName)
     stifExecTime.append(stifExecutionTime)
-    knnImageRes, knnExecutionTime, knnSujeto = knn.main(args="", fileName=fileName)
+    knnImageRes, knnExecutionTime, knnSujeto, knnSecImgRes, knnSecSujeto = knn.main(args="", fileName=fileName)
     knnExecTime.append(knnExecutionTime)
-    eigenfacesImageRes, eigenfacesExecutionTime, eigenClassReport, eigenSujeto = Eigenfaces.main(args="", fileName=fileName)
-    print(eigenClassReport)
+    eigenfacesImageRes, eigenfacesExecutionTime, eigenSujeto, eigenSecImageRes, eigenSecSujeto = Eigenfaces.main(args="", fileName=fileName)
     knnSujeto = "Sujeto " + str(knnSujeto)
     eigenfacesExecTime.append(eigenfacesExecutionTime)
     root.stifSubjectLbl.config(text=stifSujeto)
@@ -92,8 +101,11 @@ def startEvaluation():
     root.eigenSubjectLbl.config(text=eigenSujeto)
     eigenSubject.set(eigenSujeto)
     cv2.imwrite(stifResImgPath, stifImageRes)
+    cv2.imwrite(stifSecResImgPath, stifSecondImage)
     cv2.imwrite(knnResImgPath, knnImageRes)
+    cv2.imwrite(knnSecResImgPath, knnSecImgRes)
     cv2.imwrite(eigenfacesResImgPath, eigenfacesImageRes)
+    cv2.imwrite(eigenSecResImgPath, eigenSecImageRes)
     updateResultImages()
 
 def moreDetails():
@@ -112,12 +124,20 @@ def moreDetails():
     stifSecSubjectLbl = Label(detailsWindow, text='', bg='#F0F8FF', font=('arial', 14, 'bold')).place(x=55,y=510)
     knnResLbl = Label(detailsWindow, text='Resultado KNN', bg='#F0F8FF', font=('arial', 14, 'bold')).place(x=480,y=30)
     knnSubjectLbl = Label(detailsWindow, text='', bg='#F0F8FF', font=('arial', 14, 'bold')).place(x=55,y=630)
+    knnSecResLbl = Label(detailsWindow, text='Segundo mejor resultado KNN', bg='#F0F8FF', font=('arial', 14, 'bold')).place(x=480,y=280)
+    knnSecSubjectLbl = Label(detailsWindow, text='', bg='#F0F8FF', font=('arial', 14, 'bold')).place(x=55,y=630)
     detailsWindow.knnResCanva = Canvas(detailsWindow, height=200, width=200)
     detailsWindow.knnResCanva.place(x=480, y=50)
+    detailsWindow.knnSecResCanva = Canvas(detailsWindow, height=200, width=200)
+    detailsWindow.knnSecResCanva.place(x=480, y=300)
     eigenResLbl = Label(detailsWindow, text='Resultado Eigenfaces', bg='#F0F8FF', font=('arial', 14, 'bold')).place(x=905,y=30)
     eigenSubjectLbl = Label(detailsWindow, text='', bg='#F0F8FF', font=('arial', 14, 'bold')).place(x=55,y=630)
+    eigenSecResLbl = Label(detailsWindow, text='Segundo mejor resultado Eigenfaces', bg='#F0F8FF', font=('arial', 14, 'bold')).place(x=905,y=280)
+    eigenSecSubjectLbl = Label(detailsWindow, text='', bg='#F0F8FF', font=('arial', 14, 'bold')).place(x=55,y=630)
     detailsWindow.eigenResCanva = Canvas(detailsWindow, height=200, width=200)
     detailsWindow.eigenResCanva.place(x=905, y=50)
+    detailsWindow.eigenSecResCanva = Canvas(detailsWindow, height=200, width=200)
+    detailsWindow.eigenSecResCanva.place(x=905, y=300)
     print(eigenClassReport)
     #eigenClassRepLbl = Label(detailsWindow, text=, bg='#F0F8FF', font=('arial', 14, 'normal')).place(x=905,y=150)
     imageToEvaluate = cv2.imread(fileName)
@@ -128,15 +148,22 @@ def moreDetails():
     cv2.imwrite("./knnMatches.png", DetailedMatches.showDetailedMatches(imageToEvaluate, knnImage))
     cv2.imwrite("./eigenMatches.png",DetailedMatches.showDetailedMatches(imageToEvaluate, eigenfacesImage))
     root.stifDetailsPicture = PhotoImage(file = 'stifMatches.png')
+    root.stifSecPicture = PhotoImage(file = stifSecResImgPath)
     root.knnDetailsPicture = PhotoImage(file = 'knnMatches.png')
+    root.knnSecDetailsPicture = PhotoImage(file = knnSecResImgPath)
     root.eigenDetailsPicture = PhotoImage(file = 'eigenMatches.png')
+    root.eigenSecPicture = PhotoImage(file = eigenSecResImgPath)
     detailsWindow.stifResCanva.create_image(100,100,anchor=CENTER, image=root.stifDetailsPicture)
+    detailsWindow.stifSecResCanva.create_image(100,100,anchor=CENTER, image=root.stifSecPicture)
     detailsWindow.knnResCanva.create_image(100, 100, anchor=CENTER, image=root.knnDetailsPicture)
+    detailsWindow.knnSecResCanva.create_image(100, 100, anchor=CENTER, image=root.knnSecDetailsPicture)
     detailsWindow.eigenResCanva.create_image(100,100,anchor=CENTER, image=root.eigenDetailsPicture)
-    stifExpLbl = Label(detailsWindow, text=stifExp, bg='#F0F8FF', font=('arial', 12, 'normal')).place(x=40,y=300)
-    knnExpLbl = Label(detailsWindow, text=knnExp, bg='#F0F8FF', font=('arial', 12, 'normal')).place(x=460,y=300)
-    eigenExpLbl = Label(detailsWindow, text=eigenExp, bg='#F0F8FF', font=('arial', 12, 'normal')).place(x=880,y=300)
+    detailsWindow.eigenSecResCanva.create_image(100,100,anchor=CENTER, image=root.eigenSecPicture)
+    stifExpLbl = Label(detailsWindow, text=stifExp, bg='#F0F8FF', font=('arial', 12, 'normal')).place(x=40,y=550)
+    knnExpLbl = Label(detailsWindow, text=knnExp, bg='#F0F8FF', font=('arial', 12, 'normal')).place(x=460,y=550)
+    eigenExpLbl = Label(detailsWindow, text=eigenExp, bg='#F0F8FF', font=('arial', 12, 'normal')).place(x=880,y=550)
     detailsWindow.stifResCanva.update()
+    detailsWindow.stifSecResCanva.update()
     detailsWindow.knnResCanva.update()
     detailsWindow.eigenResCanva.update()
     print("Getting more details")

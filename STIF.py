@@ -31,10 +31,14 @@ def main(args, fileName):
             imagesMatches.append(imageMatches)
 
     matchedImage = -1
+    secondMatchedImage = -1
+    segundoSujeto = -1
     matchedImageMatches = -1
     sujeto = -1
     for imageNumberToEvalute in range(len(images)):
         if(len(imagesMatches[imageNumberToEvalute]) > matchedImageMatches):
+            secondMatchedImage = matchedImage
+            segundoSujeto = sujeto
             matchedImage = imageNumberToEvalute
             matchedImageMatches = len(imagesMatches[imageNumberToEvalute])
             sujeto = (matchedImage+1)//10
@@ -50,7 +54,8 @@ def main(args, fileName):
     #cv2.imshow('image', matched_img)
     #cv2.putText(img=matched_img, text="STIF", org=(0,0), fontFace=cv2.FONT_HERSHEY_TRIPLEX, fontScale=1, color=(0, 255, 0),thickness=3)
     sujetoTexto = "Sujeto " + str(sujeto+1)
-    return images[matchedImage], (end-start), sujetoTexto
+    segundoSujetoTexto = "Sujeto " + str(segundoSujeto+1)
+    return images[matchedImage], (end-start), sujetoTexto, images[secondMatchedImage], segundoSujetoTexto
 
     #cv2.waitKey(0)
     #cv2.destroyAllWindows()

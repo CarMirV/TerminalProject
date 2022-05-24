@@ -71,8 +71,10 @@ def recognizeFace(imageToRecognizePath):
     print(X,Y)
     print("Generando modelo de clasificador K-NN")
     model = KNeighborsClassifier(n_neighbors=5)
+    model2 = KNeighborsClassifier(n_neighbors=8)
     print("Ajustando modelo")
     model.fit(X,Y)
+    model2.fit(X,Y)
     imageToEvaluate = cv2.imread(imageToRecognizePath)
     print("Detectando rostro en imagen proporcionada")
     facesInImage = classifier.detectMultiScale(imageToEvaluate, 1.5, 5)
@@ -84,6 +86,7 @@ def recognizeFace(imageToRecognizePath):
             foundFace = cv2.resize(foundFace, (100,100))
             XTest.append(foundFace.reshape(-1))
         response = model.predict(np.array(XTest))
+        response2 = model2.predict(np.array(XTest))
         for i, face in enumerate(facesInImage):
             x, y, w, h = face
             #cv2.rectangle(imageToEvaluate, (x,y), (x + w, y + h), (255,0,0), 3)
@@ -94,12 +97,14 @@ def recognizeFace(imageToRecognizePath):
         foundFace = cv2.resize(foundFace, (100,100))
         XTest.append(foundFace.reshape(-1))
         response = model.predict(np.array(XTest))
+        response2 = model2.predict(np.array(XTest))
         #cv2.rectangle(imageToEvaluate, (x,y), (x + w, y + h), (255,0,0), 3)
         #cv2.putText(imageToEvaluate, response[0], (x-50, y-50), cv2.FONT_HERSHEY_COMPLEX, 2, (0,255,0), 3)
     print("Sujeto predecido es: %s" % (response[0]))
     end = time.time()
     #cv2.imshow("Sujeto predecido", imageToEvaluate)
     predictedImage = cv2.imread("./archive/s%s/1.pgm" % (response[0]+1))
+    predictedImage2 = cv2.imread("./archive/s%s/2.pgm" % (response2[0]+1))
     #cv2.imshow("Sujeto seleccionado", predictedImage)
     imageToEvaluate = cv2.resize(imageToEvaluate, (112,112), interpolation = cv2.INTER_AREA)
     sideBySide = np.concatenate((imageToEvaluate, predictedImage), axis=1)
@@ -111,7 +116,7 @@ def recognizeFace(imageToRecognizePath):
     #os.remove("./%s" % (fileName))
     print("Eliminacion exitosa, cuando se vuelva a ejecutar el algoritmo se volvera a generar este archivo")
     
-    return predictedImage, (end-start), response[0]+1
+    return predictedImage, (end-start), response[0]+1, predictedImage2, response2[0]+1
 
 def evaluatingPhoto(imageToEvaluate):
     start = time.time()

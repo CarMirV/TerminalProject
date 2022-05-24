@@ -18,6 +18,10 @@ sujetosStif = []
 for i in range(40):
     sujetosStif.append(['Sujeto ' + str(i+1)])
 
+print("Sujetos STIF")
+print(len(sujetosStif))
+print(sujetosStif)
+
 
 for (distortion, averageScore) in zip(distortions, stifGeneralScores):
     for (i, sujeto) in zip(range(40), sujetosStif):
